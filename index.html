@@ -6,6 +6,7 @@
 <title>EventHub</title>
 
 <style>
+
 *{
 margin:0;
 padding:0;
@@ -14,36 +15,51 @@ font-family:Arial,sans-serif;
 }
 
 body{
-background:#f2f5f9;
+background:#f4f6f9;
+transition:.4s;
+}
+
+.dark{
+background:#121212;
+color:white;
 }
 
 header{
-background:#2563EB;
-color:white;
+background:linear-gradient(90deg,#2563EB,#7C3AED);
 padding:20px;
-text-align:center;
+color:white;
+display:flex;
+justify-content:space-between;
+align-items:center;
 }
 
 .container{
-max-width:1000px;
-margin:30px auto;
+max-width:1200px;
+margin:auto;
 padding:20px;
 }
 
 .card{
 background:white;
 padding:20px;
-border-radius:15px;
-box-shadow:0 3px 10px rgba(0,0,0,.1);
-margin-bottom:20px;
+border-radius:20px;
+margin-top:20px;
+box-shadow:0 4px 15px rgba(0,0,0,.1);
+transition:.4s;
 }
 
-input,button,textarea{
+.dark .card{
+background:#1f1f1f;
+}
+
+input,
+textarea,
+button{
 width:100%;
 padding:12px;
 margin-top:10px;
 border-radius:10px;
-border:1px solid #ccc;
+border:1px solid #ddd;
 }
 
 button{
@@ -51,105 +67,149 @@ background:#2563EB;
 color:white;
 border:none;
 cursor:pointer;
-font-size:16px;
+font-weight:bold;
 }
 
 button:hover{
-opacity:0.9;
-}
-
-.event{
-border-left:6px solid #2563EB;
-padding:15px;
-margin-top:15px;
-background:#f8f8f8;
-border-radius:10px;
-}
-
-.delete{
-background:red;
-margin-top:10px;
+opacity:.9;
 }
 
 .hidden{
 display:none;
 }
 
-.info{
-display:flex;
+.stats{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
 gap:20px;
 margin-top:20px;
-flex-wrap:wrap;
 }
 
 .box{
-flex:1;
-background:#2563EB;
-padding:20px;
+background:linear-gradient(90deg,#2563EB,#7C3AED);
+padding:25px;
+border-radius:15px;
 color:white;
-border-radius:10px;
 text-align:center;
 }
 
-@media(max-width:768px){
-.info{
-flex-direction:column;
+.event-grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+gap:20px;
+margin-top:20px;
 }
+
+.event{
+background:white;
+border-radius:20px;
+overflow:hidden;
+box-shadow:0 5px 15px rgba(0,0,0,.1);
 }
+
+.dark .event{
+background:#1f1f1f;
+}
+
+.event img{
+width:100%;
+height:180px;
+object-fit:cover;
+}
+
+.content{
+padding:15px;
+}
+
+.delete{
+background:red;
+}
+
+.toggle{
+width:auto;
+padding:10px;
+}
+
 </style>
 </head>
 
 <body>
 
 <header>
-<h1>EventHub</h1>
+
+<div>
+<h1>🎉 EventHub</h1>
 <p>Plataforma Inteligente de Eventos</p>
+</div>
+
+<button class="toggle" onclick="modoEscuro()">
+🌙 Tema
+</button>
+
 </header>
 
 <div class="container">
 
-<div class="card" id="loginCard">
+<div class="card" id="login">
 
 <h2>Entrar</h2>
 
-<input type="text" id="username" placeholder="Digite seu nome">
+<input
+id="nome"
+placeholder="Seu nome"
+>
 
-<button onclick="login()">
+<button onclick="entrar()">
 Entrar
 </button>
 
 </div>
 
+<div id="sistema" class="hidden">
 
-<div id="dashboard" class="hidden">
-
-<div class="info">
+<div class="stats">
 
 <div class="box">
-<h2 id="totalEventos">0</h2>
-<p>Eventos Criados</p>
+<h2 id="total">0</h2>
+<p>Eventos</p>
 </div>
 
 <div class="box">
-<h2 id="usuarioNome"></h2>
+<h2 id="usuario"></h2>
 <p>Usuário</p>
 </div>
 
 </div>
 
+
 <div class="card">
 
 <h2>Criar Evento</h2>
 
-<input id="titulo" placeholder="Nome do evento">
+<input
+id="titulo"
+placeholder="Nome do evento"
+>
 
-<input id="data" type="date">
+<input
+id="data"
+type="date"
+>
 
-<textarea id="descricao"
-placeholder="Descrição"></textarea>
+<textarea
+id="descricao"
+placeholder="Descrição">
+</textarea>
+
+<input
+id="imagem"
+placeholder="Cole URL da imagem"
+>
 
 <button onclick="criarEvento()">
+
 Criar Evento
+
 </button>
 
 </div>
@@ -157,9 +217,20 @@ Criar Evento
 
 <div class="card">
 
-<h2>Lista de Eventos</h2>
+<h2>Pesquisar</h2>
 
-<div id="listaEventos"></div>
+<input
+id="pesquisa"
+placeholder="Pesquisar evento..."
+onkeyup="buscar()"
+>
+
+</div>
+
+
+<div
+class="event-grid"
+id="eventos">
 
 </div>
 
@@ -169,135 +240,143 @@ Criar Evento
 
 <script>
 
-let eventos=
+let listaEventos=
 JSON.parse(
-localStorage.getItem("eventos")
+localStorage.getItem(
+"eventos"
+)
 )||[];
 
-
-function login(){
+function entrar(){
 
 let nome=
-document.getElementById("username").value;
+document.getElementById(
+"nome"
+).value;
 
 if(nome==""){
-
-alert("Digite um nome");
-
+alert(
+"Digite seu nome"
+);
 return;
-
 }
 
 localStorage.setItem(
-"usuario",
+"user",
 nome
 );
 
-document.getElementById(
-"usuarioNome"
-).innerText=nome;
-
-document.getElementById(
-"loginCard"
-).classList.add("hidden");
-
-document.getElementById(
-"dashboard"
-).classList.remove("hidden");
-
-mostrarEventos();
+carregar();
 
 }
 
+function carregar(){
+
+document
+.getElementById(
+"login"
+)
+.classList.add(
+"hidden"
+);
+
+document
+.getElementById(
+"sistema"
+)
+.classList.remove(
+"hidden"
+);
+
+document
+.getElementById(
+"usuario"
+)
+.innerText=
+localStorage.getItem(
+"user"
+);
+
+mostrar();
+
+}
 
 function criarEvento(){
 
-let titulo=
-document.getElementById("titulo").value;
-
-let data=
-document.getElementById("data").value;
-
-let descricao=
-document.getElementById("descricao").value;
-
-
-if(
-titulo==""||
-data==""||
-descricao==""
-){
-
-alert(
-"Preencha tudo"
-);
-
-return;
-
-}
-
 let evento={
 
-titulo,
-data,
-descricao
+titulo:
+titulo.value,
+
+data:
+data.value,
+
+descricao:
+descricao.value,
+
+imagem:
+imagem.value ||
+"https://picsum.photos/500/300"
 
 };
 
-eventos.push(evento);
+listaEventos.push(
+evento
+);
 
 localStorage.setItem(
 "eventos",
-JSON.stringify(eventos)
+JSON.stringify(
+listaEventos
+)
 );
 
-document.getElementById(
-"titulo"
-).value="";
+titulo.value="";
+data.value="";
+descricao.value="";
+imagem.value="";
 
-document.getElementById(
-"data"
-).value="";
-
-document.getElementById(
-"descricao"
-).value="";
-
-mostrarEventos();
+mostrar();
 
 }
 
+function mostrar(){
 
-function mostrarEventos(){
-
-let lista=
+let area=
 document.getElementById(
-"listaEventos"
+"eventos"
 );
 
-lista.innerHTML="";
+area.innerHTML="";
 
-eventos.forEach(
-(evento,index)=>{
+listaEventos.forEach(
+(e,index)=>{
 
-lista.innerHTML+=`
+area.innerHTML+=`
 
 <div class="event">
 
-<h3>${evento.titulo}</h3>
+<img src="${e.imagem}">
+
+<div class="content">
+
+<h3>
+${e.titulo}
+</h3>
 
 <p>
-📅 ${evento.data}
+📅 ${e.data}
 </p>
 
 <p>
-${evento.descricao}
+${e.descricao}
 </p>
 
 <button
 class="delete"
-onclick=
-"remover(${index})"
+onclick="
+excluir(${index})
+"
 >
 
 Excluir
@@ -306,61 +385,89 @@ Excluir
 
 </div>
 
+</div>
+
 `;
 
 });
 
-document.getElementById(
-"totalEventos"
-).innerText=
-eventos.length;
+document
+.getElementById(
+"total"
+)
+.innerText=
+listaEventos.length;
 
 }
 
+function excluir(i){
 
-function remover(index){
-
-eventos.splice(
-index,
-1
+listaEventos.splice(
+i,1
 );
 
 localStorage.setItem(
 "eventos",
 JSON.stringify(
-eventos
+listaEventos
 )
 );
 
-mostrarEventos();
+mostrar();
 
 }
 
+function buscar(){
 
-if(localStorage.getItem(
-"usuario"
-)){
+let valor=
+document
+.getElementById(
+"pesquisa"
+)
+.value
+.toLowerCase();
 
-document.getElementById(
-"usuarioNome"
-).innerText=
+let cards=
+document.querySelectorAll(
+".event"
+);
+
+cards.forEach(
+(card)=>{
+
+card.style.display=
+
+card.innerText
+.toLowerCase()
+.includes(valor)
+
+?
+
+"block"
+
+:
+
+"none";
+
+});
+
+}
+
+function modoEscuro(){
+
+document.body.classList.toggle(
+"dark"
+);
+
+}
+
+if(
 localStorage.getItem(
-"usuario"
-);
+"user"
+)
+){
 
-document.getElementById(
-"loginCard"
-).classList.add(
-"hidden"
-);
-
-document.getElementById(
-"dashboard"
-).classList.remove(
-"hidden"
-);
-
-mostrarEventos();
+carregar();
 
 }
 
